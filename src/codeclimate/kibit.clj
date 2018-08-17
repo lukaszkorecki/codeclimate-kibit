@@ -9,6 +9,10 @@
   (:import (java.io StringWriter File))
   (:gen-class))
 
+(defn- debug [fmt-str & args]
+  (when (System/getenv "DEBUG")
+    (apply printf (apply conj [(str fmt-str "\n")] args))))
+
 (defn pprint-code [form]
   (let [string-writer (StringWriter.)]
     (pp/write form
@@ -46,8 +50,10 @@
 (defn analyze
   [dir config]
   (let [target-files  (target-files config)]
-    (mapv #(kibit.check/check-file %
-                                   :reporter codeclimate-reporter)
+    (mapv (fn [f]
+            (debug "file=%s" f)
+             (kibit.check/check-file f
+                                   :reporter codeclimate-reporter))
           target-files)))
 
 (def cli-options
@@ -69,20 +75,28 @@
        (clojure.string/join \newline errors)))
 
 (defn run-checks [arguments options]
+  (printf "args=%s opts=%s\n" arguments options)
   (let [target-dir  (io/file (first arguments))
-          config-file (io/file (:config options))
-          config-data (when (and config-file (.exists config-file))
-                        (json/parse-string (slurp config-file) true))]
-      (analyze target-dir config-data)))
+        config-file (io/file (:config options))
+        config-data (when (and config-file (.exists config-file))
+                      (json/parse-string (slurp config-file) true))]
+    (debug "target-dir=%s" target-dir)
+    (analyze target-dir config-data)))
 
 (defn exit [status message]
   (println message)
   (System/exit status))
 
 (defn -main [& args]
-  (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
-    (cond
-      (:help options) (exit 0 (usage summary))
-      (not= (count arguments) 1) (exit 1 (usage summary))
-      errors (exit 0 (error-msg errors)))
-    (run-checks arguments options)))
+  (when (System/getenv "DEBUG")
+    (println "HIIIIII"))
+  (debug "args=%s" args)
+  (try
+    (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
+      (cond
+        (:help options) (exit 0 (usage summary))
+        (not= (count arguments) 1) (exit 1 (usage summary))
+        errors (exit 0 (error-msg errors)))
+      (run-checks arguments options))
+    (catch Exception e
+      (println e))))
