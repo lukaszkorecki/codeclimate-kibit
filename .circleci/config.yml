@@ -44,5 +44,5 @@ jobs:
             lein trampoline cloverage --lcov --no-text --no-html --no-summary -o $PWD
             testRes=$?
             mkdir -p coverage
-            mv lcov.info coverage/lcov.info
-            ./cc-test-reporter after-build --coverage-input-type lcov --exit-code $testRes --prefix=src/
+            sed 's/^SF:/SF:src\//' lcov.info > coverage/lcov.info
+            ./cc-test-reporter after-build --coverage-input-type lcov --exit-code $testRes 
