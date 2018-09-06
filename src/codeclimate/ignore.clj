@@ -10,3 +10,6 @@
   (if (some arg)
     :foo
     nil))
+
+(defn another-mistake [uh]
+  (+ 1 uh))
