@@ -5,3 +5,8 @@
   (->> ["foo"
         "bar"]
        distinct))
+
+(defn making-it-worse [arg]
+  (if (some arg)
+    :foo
+    nil))
