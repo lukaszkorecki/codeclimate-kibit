@@ -5,3 +5,11 @@
   (->> ["foo"
         "bar"]
        distinct))
+
+(defn making-it-worse [arg]
+  (if (some arg)
+    :foo
+    nil))
+
+(defn another-mistake [uh]
+  (+ 1 uh))
